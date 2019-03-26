@@ -32,30 +32,6 @@ from zonebot.zoneminder.zoneminder import ZoneMinder
 LOGGER = logging.getLogger("zonebot")
 
 
-def _parse_directory_name(dirname):
-    elements = zonebot.split_os_path(dirname)
-
-    # Array will contain a variable number of leading elements
-    # but always ends with:
-    #   monitor/yy/mm/d/hh/mm/ss
-    # we split that to
-    #   monitor id
-    # and
-    #   yyyy-mm-dd hh:mm:ss
-
-    idx = -7
-    if elements[-1] == '':
-        # Just in case the path ends with a '/'
-        idx = -8
-
-    monitor = elements[idx]
-    timestamp = "20" + elements[idx + 1] + "-" + elements[idx + 2] + "-" + elements[idx + 3] + \
-                " " + \
-                elements[idx + 4] + ":" + elements[idx + 5] + ":" + elements[idx + 6]
-
-    return monitor, timestamp
-
-
 def zonebot_alert_main():
     """
     Main method for the zonebot-alert script
@@ -71,8 +47,8 @@ def zonebot_alert_main():
                zonebot.__author__ +
                " (" + zonebot.__email__ + ")")
 
-    parser.add_argument('event_dir',
-                        help='The directory in which the event files are stored')
+    parser.add_argument('event_id',
+                        help='The ID of the event')
 
     parser.add_argument('-c', '--config',
                         metavar='file',
@@ -96,13 +72,12 @@ def zonebot_alert_main():
     # Reconfigure logging with config values
     zonebot.init_logging(config)
 
-    (monitor, timestamp) = _parse_directory_name(args.event_dir)
-    LOGGER.info("Sending alert about event at %s on monitor %s", timestamp, monitor)
+    LOGGER.info("Sending alert about event with ID %s", args.event_id)
 
     zone_minder = ZoneMinder(config)
     zone_minder.login()
 
-    data = zone_minder.load_event(monitor, timestamp)
+    data = zone_minder.load_event(args.event_id)
     data = zone_minder.parse_event(data)
 
     if 'image_filename' not in data:

@@ -158,28 +158,25 @@ class ZoneMinder(object):
 
         return self.monitors
 
-    def load_event(self, monitor, timestamp):
+    def load_event(self, event_id):
         """
-        Queries the server for the event with the provided starting timestamp and monitor
+        Queries the server for the event with the provided ID
 
-        :param monitor: The monitor from the which the event was generated
-        :type monitor: str
-        :param timestamp: The timestamp ('yyyy-mm-dd hh:mm:ss') at which the event started
-        :type timestamp: str
+        :param event_id: The ID of the event
+        :type event_id: str
         :return: A JSON object containing the loaded event
         """
 
-        url = "{0}/api/events/index/MonitorId:{1}/StartTime =:{2}.json".format(
+        url = "{0}/api/events/{1}.json".format(
             self.url,
-            monitor,
-            timestamp)
+            event_id)
 
         LOGGER.debug("Loading event metadata from %s",  url)
 
         timestamp_request = self.session.get(url=url)
         if timestamp_request.status_code != 200:
-            raise Exception("Could not obtain data for timestamp " +
-                            timestamp + " response code " + str(timestamp_request.status_code))
+            raise Exception("Could not obtain data for event ID " +
+                            event_id + " response code " + str(timestamp_request.status_code))
 
         # This should be the list of events that match our query. Hopefully only on, but
         # we only ever refer to the first item.

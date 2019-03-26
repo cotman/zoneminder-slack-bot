@@ -186,3 +186,7 @@ modules.xml
 .idea/misc.xml
 *.ipr
 /.idea/codeStyleSettings.xml
+
+# Eclipse PyDev
+.project
+.pydevproject

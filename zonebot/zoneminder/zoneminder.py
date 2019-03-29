@@ -22,6 +22,7 @@ import json
 import logging
 import time
 import hashlib
+import re
 from io import BytesIO
 
 import requests
@@ -167,34 +168,29 @@ class ZoneMinder(object):
         :return: A JSON object containing the loaded event
         """
 
-        url = "{0}/api/events/{1}.json".format(
-            self.url,
-            event_id)
-
-        LOGGER.debug("Loading event metadata from %s",  url)
-
-        timestamp_request = self.session.get(url=url)
-        if timestamp_request.status_code != 200:
-            raise Exception("Could not obtain data for event ID " +
-                            event_id + " response code " + str(timestamp_request.status_code))
-
-        # This should be the list of events that match our query. Hopefully only on, but
-        # we only ever refer to the first item.
-        data = json.loads(timestamp_request.text)
-
-        # Now we should have the event ID in the returned data.
-        event_id = data['events'][0]["Event"]["Id"]
-
         # Make a query for just this ID
         url = "{0}/api/events/{1}.json".format(self.url, event_id)
         LOGGER.debug("Loading event from %s", url)
 
         event_request = self.session.get(url=url)
+
         if event_request.status_code != 200:
             raise Exception("Could not obtain data for event " +
                             event_id + " response code " + str(event_request.status_code))
 
-        data = json.loads(event_request.text)
+        # ZM Bug: Munge response to remove potential Cake warning in the output
+        skipped = False
+        event_request_text = ["{"]
+        for event_request_line in event_request.text.splitlines():
+            if not skipped and "    \"event\": {" not in event_request_line:
+                continue
+
+            skipped = True
+            event_request_text.append(event_request_line)
+
+        event_request_text = "".join(event_request_text)
+
+        data = json.loads(event_request_text)
         return data
 
     @staticmethod
@@ -236,7 +232,7 @@ class ZoneMinder(object):
 
         result['key_frame'] = key_frame
         if key_frame_id:
-            result['image_filename'] = key_frame_id.zfill(5) + '-capture.jpg'
+            result['image_filename'] = 'snapshot.jpg'
 
         return result
 

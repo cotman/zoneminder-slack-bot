@@ -47,13 +47,16 @@ def zonebot_alert_main():
                zonebot.__author__ +
                " (" + zonebot.__email__ + ")")
 
-    parser.add_argument('event_id',
-                        help='The ID of the event')
-
     parser.add_argument('-c', '--config',
                         metavar='file',
                         required=False,
                         help='Load the specified config file')
+
+    parser.add_argument('event_id',
+                        help='The ID of the event')
+
+    parser.add_argument('event_dir',
+                        help='The directory of the event')
 
     args = parser.parse_args()
 
@@ -72,7 +75,7 @@ def zonebot_alert_main():
     # Reconfigure logging with config values
     zonebot.init_logging(config)
 
-    LOGGER.info("Sending alert about event with ID %s", args.event_id)
+    LOGGER.info("Sending alert about event with ID %s and directory %s", args.event_id, args.event_dir)
 
     zone_minder = ZoneMinder(config)
     zone_minder.login()
@@ -129,3 +132,11 @@ def zonebot_alert_main():
 
     LOGGER.info('Image posted to %s as %s', config['Slack']['channels'], link)
     sys.exit(0)
+
+
+if __name__ == "__main__":
+    """
+    Run main function.
+    """
+
+    zonebot_alert_main()
